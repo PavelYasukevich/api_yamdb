@@ -1,14 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from django.db import models
-from django.shortcuts import render
-from rest_framework import filters, mixins, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import RetrieveUpdateAPIView, get_object_or_404
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenViewBase
 
 from .permissions import IsAdmin
