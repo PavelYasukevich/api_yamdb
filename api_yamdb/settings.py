@@ -34,16 +34,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
-    'api',
-    'rest_framework',
-    'django_filters'
-=======
     'rest_framework',
     'django_filters',
     'api',
 
->>>>>>> develop/content
 ]
 
 AUTH_USER_MODEL = 'api.MyUser'

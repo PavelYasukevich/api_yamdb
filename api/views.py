@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from rest_framework import filters, status, viewsets
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import RetrieveUpdateAPIView, get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -8,9 +10,18 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenViewBase
 
+from api.filters import TitleFilter
+from api.models import Category, Genre, Title
+from api.permissions import CustomerAccessPermission
+from api.serializers import (
+    CategoriesSerializer,
+    GenresSerializer,
+    TitleSerializeRead,
+    TitleSerializerWrite,
+)
+
 from .permissions import IsAdmin
-from .serializers import (EmailSerializer, MyTokenObtainPairSerializer,
-                          MyUserSerializer)
+from .serializers import EmailSerializer, MyTokenObtainPairSerializer, MyUserSerializer
 
 User = get_user_model()
 
@@ -85,16 +96,6 @@ class SelfMyUserViewSet(RetrieveUpdateAPIView):
         obj = get_object_or_404(queryset, id=user.id)
         self.check_object_permissions(self.request, obj)
         return obj
-from django.shortcuts import get_object_or_404
-
-from rest_framework import viewsets, filters, status, mixins
-from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-
-from api.models import Title, Category, Genre
-from api.serializers import TitleSerializerWrite, CategoriesSerializer, GenresSerializer, TitleSerializeRead
-from api.filters import TitleFilter
-from api.permissions import CustomerAccessPermission
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -104,57 +105,64 @@ class TitleViewSet(viewsets.ModelViewSet):
     Доступ: GET - Нет ограничений
             POST, PUT, PATCH, DELETE - admin
     """
+
     queryset = Title.objects.all()
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
     permission_classes = (CustomerAccessPermission,)
 
     def get_serializer_class(self):
-        if self.action == 'list' or self.action == 'retrieve':
+        if self.action == "list" or self.action == "retrieve":
             return TitleSerializeRead
         else:
             return TitleSerializerWrite
 
 
-class CategoryViewSet(mixins.CreateModelMixin,
-                      mixins.ListModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+class CategoryViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     Таблица: Category
     Разрешеные методы: GET, POST, DELETE
     Доступ: GET - Нет ограничений
             POST, DELETE - admin
     """
+
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['=name']
+    search_fields = ["=name"]
     permission_classes = (CustomerAccessPermission,)
 
     def destroy(self, request, *args, **kwargs):
-        instance = get_object_or_404(Category, slug=self.kwargs['pk'])
+        instance = get_object_or_404(Category, slug=self.kwargs["pk"])
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class GenreViewSet(mixins.CreateModelMixin,
-                   mixins.ListModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+class GenreViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     """
-        Таблица: Genre
-        Разрешеные методы: GET, POST, DELETE
-        Доступ: GET - Нет ограничений
-                POST, DELETE - admin
+    Таблица: Genre
+    Разрешеные методы: GET, POST, DELETE
+    Доступ: GET - Нет ограничений
+            POST, DELETE - admin
     """
+
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['=name']
+    search_fields = ["=name"]
     permission_classes = (CustomerAccessPermission,)
 
     def destroy(self, request, *args, **kwargs):
-        instance = get_object_or_404(Genre, slug=self.kwargs['pk'])
+        instance = get_object_or_404(Genre, slug=self.kwargs["pk"])
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
