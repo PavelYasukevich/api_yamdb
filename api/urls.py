@@ -8,8 +8,8 @@ router_v1.register("users", views.MyUserViewSet, basename="users")
 router_v1.register("titles", views.TitleViewSet, basename="titles")
 router_v1.register("categories", views.CategoryViewSet, basename="categories")
 router_v1.register("genres", views.GenreViewSet, basename="genres")
-router_v1.register("reviews", views.ReviewViewSet, basename="reviews")
-router_v1.register("comments", views.ReviewViewSet, basename="comments")
+router_v1.register(r'titles/(?P<title_id>\d+)/comments',views.CommentViewSet, basename='comments') 
+router_v1.register(r'titles/(?P<title_id>\d+)/reviews',views.ReviewViewSet, basename='reviews') 
 
 auth_patterns = [
     path("email/", views.get_confirmation_code, name="get_confirmation_code"),
