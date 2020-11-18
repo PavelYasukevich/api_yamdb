@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
@@ -8,26 +7,23 @@ from rest_framework.generics import RetrieveUpdateAPIView, get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.views import TokenViewBase
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404 
-from rest_framework.viewsets import ModelViewSet 
- 
-from .models import Title, Review, User
-from .serializers import (ReviewSerializer, CommentSerializer) 
 
-from api.filters import TitleFilter
-from api.models import Category, Genre, Title
-from api.permissions import CustomerAccessPermission
-from api.serializers import (
+from .filters import TitleFilter
+from .models import Category, Comment, Genre, Review, Title
+from .permissions import CustomerAccessPermission, IsAdmin
+from .serializers import (
     CategoriesSerializer,
+    CommentSerializer,
+    EmailSerializer,
     GenresSerializer,
+    MyTokenObtainPairSerializer,
+    MyUserSerializer,
+    ReviewSerializer,
     TitleSerializeRead,
     TitleSerializerWrite,
 )
-
-from .permissions import IsAdmin
-from .serializers import EmailSerializer, MyTokenObtainPairSerializer, MyUserSerializer
 
 User = get_user_model()
 
@@ -52,7 +48,7 @@ def get_confirmation_code(request):
 
         confirmation_code = generate_confirmation_code()
 
-        user = User.objects.create(
+        User.objects.create(
             email=serializer.data["email"], password=confirmation_code
         )
         send_mail(
@@ -174,27 +170,27 @@ class GenreViewSet(
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ReviewViewSet(ModelViewSet): 
-    serializer_class = ReviewSerializer 
- 
-    def get_queryset(self): 
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id')) 
-        queryset = Review.objects.filter(title_id=title) 
-        return queryset 
- 
-    def perform_create(self, serializer): 
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id')) 
-        return serializer.save(author=self.request.user, title_id=title) 
+class ReviewViewSet(ModelViewSet):
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        queryset = Review.objects.filter(title_id=title)
+        return queryset
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        return serializer.save(author=self.request.user, title_id=title)
 
 
-class CommentViewSet(ModelViewSet): 
+class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
- 
-    def get_queryset(self): 
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id')) 
-        queryset = Comment.objects.filter(title_id=title) 
-        return queryset 
- 
-    def perform_create(self, serializer): 
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id')) 
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        queryset = Comment.objects.filter(title_id=title)
+        return queryset
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
         return serializer.save(author=self.request.user, title_id=title)

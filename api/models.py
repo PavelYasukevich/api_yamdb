@@ -8,7 +8,9 @@ class MyUserManager(BaseUserManager):
         extra_fields.setdefault("is_superuser", False)
         return self._create_user(email, username, password, **extra_fields)
 
-    def _create_user(self, email, username=None, password=None, **extra_fields):
+    def _create_user(
+        self, email, username=None, password=None, **extra_fields
+    ):
         if not email:
             raise ValueError("Users must have an email address")
 
@@ -20,7 +22,9 @@ class MyUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, username=None, password=None, **extra_fields):
+    def create_superuser(
+        self, email, username=None, password=None, **extra_fields
+    ):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
@@ -42,7 +46,9 @@ class MyUser(AbstractUser):
 
     email = models.EmailField(max_length=25, unique=True)
     bio = models.CharField(max_length=25, blank=True)
-    role = models.CharField(max_length=12, choices=Roles.choices, default="user")
+    role = models.CharField(
+        max_length=12, choices=Roles.choices, default="user"
+    )
 
     objects = MyUserManager()
 
@@ -81,31 +87,26 @@ class Title(models.Model):
 
 class Review(models.Model):
     author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="reviews")
+        MyUser, on_delete=models.CASCADE, related_name="reviews"
+    )
     title_id = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE,
-        related_name="reviews")
+        Title, on_delete=models.CASCADE, related_name="reviews"
+    )
     text = models.TextField()
     score = models.IntegerField()
     pub_date = models.DateTimeField(
-        "Дата добавления",
-        auto_now_add=True,
-        db_index=True)
+        "Дата добавления", auto_now_add=True, db_index=True
+    )
+
 
 class Comment(models.Model):
     author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="comments")
+        MyUser, on_delete=models.CASCADE, related_name="comments"
+    )
     text = models.TextField()
     pub_date = models.DateTimeField(
-        "Дата добавления",
-        auto_now_add=True,
-        db_index=True)
+        "Дата добавления", auto_now_add=True, db_index=True
+    )
     review_id = models.ForeignKey(
-        Review,
-        on_delete=models.CASCADE,
-        related_name="comments")
+        Review, on_delete=models.CASCADE, related_name="comments"
+    )
