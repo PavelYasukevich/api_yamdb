@@ -9,6 +9,12 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenViewBase
+from django.shortcuts import render
+from django.shortcuts import get_object_or_404 
+from rest_framework.viewsets import ModelViewSet 
+ 
+from .models import Title, Review, User
+from .serializers import (ReviewSerializer, CommentSerializer) 
 
 from api.filters import TitleFilter
 from api.models import Category, Genre, Title
@@ -166,3 +172,29 @@ class GenreViewSet(
         instance = get_object_or_404(Genre, slug=self.kwargs["pk"])
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ReviewViewSet(ModelViewSet): 
+    serializer_class = ReviewSerializer 
+ 
+    def get_queryset(self): 
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id')) 
+        queryset = Review.objects.filter(title_id=title) 
+        return queryset 
+ 
+    def perform_create(self, serializer): 
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id')) 
+        return serializer.save(author=self.request.user, title_id=title) 
+
+
+class CommentViewSet(ModelViewSet): 
+    serializer_class = CommentSerializer
+ 
+    def get_queryset(self): 
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id')) 
+        queryset = Comment.objects.filter(title_id=title) 
+        return queryset 
+ 
+    def perform_create(self, serializer): 
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id')) 
+        return serializer.save(author=self.request.user, title_id=title)

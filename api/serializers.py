@@ -5,6 +5,10 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.models import Category, Genre, Title
+from django.db import models 
+from rest_framework import serializers 
+ 
+from .models import Title, Review, User, Comment
 
 User = get_user_model()
 
@@ -73,3 +77,17 @@ class TitleSerializerWrite(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = ("id", "name", "year", "description", "genre", "category")
+
+
+class ReviewSerializer(serializers.ModelSerializer): 
+    author = serializers.StringRelatedField() 
+ 
+    class Meta: 
+        fields = ('id','title_id', 'author', 'text', 'score', 'pub_date') 
+        model = Review
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.CharField(source='author.username')
+    class Meta:
+        fields = ('id','review_id', 'author', 'text', 'pub_date')
+        model = Comment

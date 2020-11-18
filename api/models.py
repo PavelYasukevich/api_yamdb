@@ -77,3 +77,35 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Review(models.Model):
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="reviews")
+    title_id = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name="reviews")
+    text = models.TextField()
+    score = models.IntegerField()
+    pub_date = models.DateTimeField(
+        "Дата добавления",
+        auto_now_add=True,
+        db_index=True)
+
+class Comment(models.Model):
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="comments")
+    text = models.TextField()
+    pub_date = models.DateTimeField(
+        "Дата добавления",
+        auto_now_add=True,
+        db_index=True)
+    review_id = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name="comments")
