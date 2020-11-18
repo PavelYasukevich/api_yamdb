@@ -12,7 +12,7 @@ from rest_framework_simplejwt.views import TokenViewBase
 
 from .filters import TitleFilter
 from .models import Category, Comment, Genre, Review, Title
-from .permissions import CustomerAccessPermission, IsAdmin
+from .permissions import CustomerAccessPermission, IsAdmin, MethodAccessPermission
 from .serializers import (
     CategoriesSerializer,
     CommentSerializer,
@@ -172,7 +172,7 @@ class GenreViewSet(
 
 class ReviewViewSet(ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (CustomerAccessPermission,) 
+    permission_classes = (MethodAccessPermission,) 
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
