@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.validators import UniqueTogetherValidator 
 
 from .models import Category, Comment, Genre, Review, Title
 
@@ -97,6 +98,22 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("id", "title_id", "author", "text", "score", "pub_date")
         model = Review
+
+        validators = [ 
+            UniqueTogetherValidator( 
+                queryset=Review.objects.all(), 
+                fields=['author', 'title_id'] 
+            ) 
+        ] 
+
+    def validate_score(self, score):
+        if score < 1 or score > 10:
+            raise serializers.ValidationError("Оценка должна между 1 и 10.")
+        return score
+        if self.text == "":
+            raise serializers.ValidationError("Отзыв не может быть пустым.")
+
+        
 
 
 class CommentSerializer(serializers.ModelSerializer):
