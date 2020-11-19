@@ -25,6 +25,5 @@ class MethodAccessPermission(permissions.BasePermission):
             return True
         elif request.method == "POST":
             return request.user.is_authenticated or request.user.is_staff or request.user.role in ("admin", "django_admin")
-
         else:
             return request.user.is_authenticated and request.user.is_staff or request.user.role in ("admin", "django_admin")

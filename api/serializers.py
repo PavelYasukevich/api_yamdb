@@ -85,7 +85,14 @@ class TitleSerializerWrite(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = serializers.StringRelatedField()
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+    title_id = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='name'
+    )
 
     class Meta:
         fields = ("id", "title_id", "author", "text", "score", "pub_date")
