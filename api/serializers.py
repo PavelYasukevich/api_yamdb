@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.validators import UniqueTogetherValidator 
 
 from .models import Category, Comment, Genre, Review, Title
 
@@ -34,9 +34,7 @@ class MyTokenObtainPairSerializer(serializers.Serializer):
         user = get_object_or_404(
             User, email=data["email"], password=data["confirmation_code"]
         )
-
         refresh = RefreshToken.for_user(user)
-
         return {"access": str(refresh.access_token)}
 
 
@@ -61,10 +59,14 @@ class TitleSerializeRead(serializers.ModelSerializer):
 
     genre = GenresSerializer(read_only=True, many=True)
     category = CategoriesSerializer(read_only=True)
+    rating = serializers.SerializerMethodField("calc_rating")
+
+    def calc_rating(self, obj):
+        return obj.reviews.aggregate(Avg("score"))["score__avg"]
 
     class Meta:
         model = Title
-        fields = ("id", "name", "year", "description", "genre", "category")
+        fields = "__all__"
 
 
 class TitleSerializerWrite(serializers.ModelSerializer):
@@ -82,43 +84,39 @@ class TitleSerializerWrite(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ("id", "name", "year", "description", "genre", "category")
+        fields = "__all__"
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username'
+        read_only=True, slug_field="username"
     )
-    title_id = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='name'
-    )
+    title_id = serializers.SlugRelatedField(read_only=True, slug_field="name")
 
     class Meta:
-        fields = ("id", "title_id", "author", "text", "score", "pub_date")
+        fields = "__all__"
         model = Review
 
-        validators = [ 
-            UniqueTogetherValidator( 
-                queryset=Review.objects.all(), 
-                fields=['author', 'title_id'] 
-            ) 
-        ] 
-
-    def validate_score(self, score):
-        if score < 1 or score > 10:
-            raise serializers.ValidationError("Оценка должна между 1 и 10.")
-        return score
-        if self.text == "":
-            raise serializers.ValidationError("Отзыв не может быть пустым.")
-
-        
+    def validate(self, data):
+        title_id = self.context["view"].kwargs["title_id"]
+        author = self.context["request"].user
+        if self.context["request"].method == "POST":
+            if Review.objects.filter(
+                author=author, title_id=title_id
+            ).exists():
+                raise serializers.ValidationError("Вы уже оставили отзыв")
+            if 10 < data["score"] < 1:
+                raise serializers.ValidationError(
+                    "Оценка должна между 1 и 10."
+                )
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.CharField(source="author.username")
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field="username"
+    )
 
     class Meta:
-        fields = ("id", "review_id", "author", "text", "pub_date")
+        exclude = ["review_id"]
         model = Comment
