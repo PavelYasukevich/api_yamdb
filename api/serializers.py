@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from rest_framework import serializers
-from rest_framework.generics import get_object_or_404
 
 from .models import Category, Comment, Genre, Review, Title
 
@@ -16,12 +15,12 @@ class MyUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "first_name",
-            "last_name",
-            "username",
-            "bio",
-            "email",
-            "role",
+            'first_name',
+            'last_name',
+            'username',
+            'bio',
+            'email',
+            'role',
         ]
 
 
@@ -35,7 +34,7 @@ class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        exclude = ("id",)
+        exclude = ('id',)
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -43,7 +42,7 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        exclude = ("id",)
+        exclude = ('id',)
 
 
 class TitleSerializeRead(serializers.ModelSerializer):
@@ -51,59 +50,59 @@ class TitleSerializeRead(serializers.ModelSerializer):
 
     genre = GenresSerializer(read_only=True, many=True)
     category = CategoriesSerializer(read_only=True)
-    rating = serializers.SerializerMethodField("calc_rating")
+    rating = serializers.SerializerMethodField('calc_rating')
 
     def calc_rating(self, obj):
-        return obj.reviews.aggregate(Avg("score"))["score__avg"]
+        return obj.reviews.aggregate(Avg('score'))['score__avg']
 
     class Meta:
         model = Title
-        fields = "__all__"
+        fields = '__all__'
 
 
 class TitleSerializerWrite(serializers.ModelSerializer):
     """Запись данных в таблицу Title"""
 
     genre = serializers.SlugRelatedField(
-        slug_field="slug",
+        slug_field='slug',
         many=True,
         required=True,
         queryset=Genre.objects.all(),
     )
     category = serializers.SlugRelatedField(
-        slug_field="slug", required=True, queryset=Category.objects.all()
+        slug_field='slug', required=True, queryset=Category.objects.all()
     )
 
     class Meta:
         model = Title
-        fields = "__all__"
+        fields = '__all__'
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field="username"
+        read_only=True, slug_field='username'
     )
 
     class Meta:
-        exclude = ["title"]
+        exclude = ['title']
         model = Review
 
     def validate(self, data):
-        if self.context["request"].method == "POST":
-            title = self.context["request"].parser_context["kwargs"]["title_id"]
-            author = self.context["request"].user
-            if Review.objects.filter(
-                author=author, title=title
-            ).exists():
-                raise serializers.ValidationError("Вы уже оставили отзыв")
+        if self.context['request'].method == 'POST':
+            title = self.context['request'].parser_context['kwargs'][
+                'title_id'
+            ]
+            author = self.context['request'].user
+            if Review.objects.filter(author=author, title=title).exists():
+                raise serializers.ValidationError('Вы уже оставили отзыв')
         return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field="username"
+        read_only=True, slug_field='username'
     )
 
     class Meta:
-        exclude = ["review_id"]
+        exclude = ['review_id']
         model = Comment
