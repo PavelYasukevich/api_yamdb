@@ -71,11 +71,11 @@ class MyUser(AbstractUser):
         return self.role == "moderator"
 
     @property
-    def is_admin():
+    def is_admin(self):
         return self.role == "admin"
 
     @property
-    def is_django_admin():
+    def is_django_admin(self):
         return self.role == "django_admin"
 
     objects = MyUserManager()
@@ -136,7 +136,11 @@ class Review(models.Model):
     )
 
     title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name="reviews"
+        Title,
+        help_text="Произведение, на которое сделан отзыв",
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        verbose_name="Произведение",
     )
 
     text = models.TextField(
@@ -152,19 +156,28 @@ class Review(models.Model):
         auto_now_add=True,
         db_index=True,
         help_text="Дата добавления отзыва",
-        verbose_name="Дата добавления"
+        verbose_name="Дата добавления",
     )
 
     class Meta:
         constraints = [
             UniqueConstraint(
                 fields=['author', 'title'],
-                name="unique_review"
+                name="unique_review",
             )
         ]
+        ordering = ['title']
+        verbose_name = "Отзыв пользователя"
+        verbose_name_plural = "Отзывы пользователей"
 
     def __str__(self):
-        pass
+        fragment = (
+            self.text if len(self.text) <= 50 else self.text[:50] + "..."
+        )
+        date = self.pub_date.strftime("%d %m %Y")
+        author = self.author
+        return f"{author} - {date} - {fragment}"
+
 
 class Comment(models.Model):
     author = models.ForeignKey(
@@ -172,7 +185,7 @@ class Comment(models.Model):
         help_text="Автор комментария",
         on_delete=models.CASCADE,
         related_name="comments",
-        verbose_name="Автор комментария"
+        verbose_name="Автор комментария",
     )
     text = models.TextField(
         help_text="Комментарий пользователя",
@@ -182,12 +195,25 @@ class Comment(models.Model):
         auto_now_add=True,
         db_index=True,
         help_text="Дата добавления комментария",
-        verbose_name="Дата добавления"
+        verbose_name="Дата добавления",
     )
     review_id = models.ForeignKey(
         Review,
         help_text="Комментируемый отзыв",
         on_delete=models.CASCADE,
         related_name="comments",
-        verbose_name="Комментируемый отзыв"
+        verbose_name="Комментируемый отзыв",
     )
+
+    class Meta:
+        ordering = ['-pub_date']
+        verbose_name = "Комментарий пользователя"
+        verbose_name_plural = "Комментарии пользователей"
+
+    def __str__(self):
+        fragment = (
+            self.text if len(self.text) <= 50 else self.text[:50] + "..."
+        )
+        date = self.pub_date.strftime("%d %m %Y")
+        author = self.author
+        return f"{author} - {date} - {fragment}"

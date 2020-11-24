@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
@@ -10,51 +11,40 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.views import TokenViewBase
 
+from . import serializers
 from .filters import TitleFilter
 from .models import Category, Comment, Genre, Review, Title
-from .permissions import (
-    CustomerAccessPermission,
-    IsAdmin,
-    ReviewCommentPermission,
-)
-from . import serializers
+from .permissions import (CustomerAccessPermission, IsAdmin,
+                          ReviewCommentPermission)
+
 
 User = get_user_model()
-
-
-def generate_confirmation_code():
-    from secrets import token_hex
-
-    return token_hex(10)
-
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def get_confirmation_code(request):
     serializer = serializers.EmailSerializer(data=request.data)
-    if serializer.is_valid():
-
-        if User.objects.filter(email=serializer.data["email"]).exists():
-            return Response(
-                {"error": "User with this email already exists"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        confirmation_code = generate_confirmation_code()
-
-        User.objects.create(
-            email=serializer.data["email"], password=confirmation_code
-        )
-        send_mail(
-            "Your confirmation code",
-            confirmation_code,
-            "noreply@yamdb.com",
-            [serializer.data["email"]],
-        )
+    serializer.is_valid(raise_exception=True)
+    if User.objects.filter(email=serializer.data["email"]).exists():
         return Response(
-            {"message": "Confirmation code has been sent to your email"},
-            status=status.HTTP_200_OK,
+            {"error": "User with this email already exists"},
+            status=status.HTTP_400_BAD_REQUEST,
         )
+
+    confirmation_code = default_token_generator.make_token(request.user)
+
+    User.objects.create(
+        email=serializer.data["email"], password=confirmation_code
+    )
+    send_mail(
+        "Your confirmation code",
+        confirmation_code,
+        [serializer.data["email"]],
+    )
+    return Response(
+        {"email": serializer.data["email"]},
+        status=status.HTTP_200_OK,
+    )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -170,8 +160,7 @@ class ReviewViewSet(ModelViewSet):
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
-        queryset = Review.objects.filter(title=title)
-        return queryset
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
@@ -183,10 +172,11 @@ class CommentViewSet(ModelViewSet):
     permission_classes = [ReviewCommentPermission]
 
     def get_queryset(self):
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
         review = get_object_or_404(Review, pk=self.kwargs.get("review_id"))
-        queryset = Comment.objects.filter(review_id=review)
-        return queryset
+        return review.comments.all()
 
     def perform_create(self, serializer):
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
         review = get_object_or_404(Review, pk=self.kwargs.get("review_id"))
         return serializer.save(author=self.request.user, review_id=review)

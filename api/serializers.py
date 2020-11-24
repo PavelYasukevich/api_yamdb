@@ -35,7 +35,7 @@ class MyTokenObtainPairSerializer(serializers.Serializer):
             User, email=data["email"], password=data["confirmation_code"]
         )
         refresh = RefreshToken.for_user(user)
-        return {"access": str(refresh.access_token)}
+        return {"token": str(refresh.access_token)}
 
 
 class GenresSerializer(serializers.ModelSerializer):
@@ -97,9 +97,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate(self, data):
-        title = self.context["view"].kwargs["title_id"]
-        author = self.context["request"].user
         if self.context["request"].method == "POST":
+            title = self.context["request"].parser_context["kwargs"]["title_id"]
+            author = self.context["request"].user
             if Review.objects.filter(
                 author=author, title=title
             ).exists():
