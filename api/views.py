@@ -14,11 +14,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from . import serializers
 from .filters import TitleFilter
 from .models import Category, Genre, Review, Title
-from .permissions import (
-    CustomerAccessPermission,
-    IsAdmin,
-    ReviewCommentPermission,
-)
+from .permissions import (CustomerAccessPermission, IsAdmin,
+                          ReviewCommentPermission)
 
 User = get_user_model()
 
