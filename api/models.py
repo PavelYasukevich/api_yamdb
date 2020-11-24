@@ -57,25 +57,65 @@ class MyUser(AbstractUser):
 
 
 class Genre(models.Model):
-    objects = models.Manager()
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+    name = models.CharField(
+        verbose_name='Название',
+        max_length=200,
+        help_text='Максимальная длина, 200 символов.'
+    )
+    slug = models.SlugField(
+        verbose_name='Ссылка',
+        unique=True,
+        max_length=10,
+        help_text='Содержание уникальное, длиной до 10 символов.'
+
+    )
 
 
 class Category(models.Model):
-    objects = models.Manager()
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+    name = models.CharField(
+        verbose_name='Название',
+        max_length=200,
+        help_text='Максимальная длина, 200 символов.'
+    )
+    slug = models.SlugField(
+        verbose_name='Ссылка',
+        unique=True,
+        max_length=10,
+        help_text='Содержание уникальное, длиной до 10 символов.'
+    )
 
 
 class Title(models.Model):
-    objects = models.Manager()
-    name = models.CharField(max_length=200)
-    year = models.PositiveSmallIntegerField()
-    description = models.TextField(blank=True)
-    genre = models.ManyToManyField(Genre, blank=True)
+    name = models.CharField(
+        verbose_name='Название',
+        max_length=200,
+        help_text='Максимальная длина, 200 символов.'
+    )
+    year = models.PositiveSmallIntegerField(
+        verbose_name='Год',
+        db_index=True
+    )
+    description = models.TextField(
+        verbose_name='Описание',
+        blank=True,
+        help_text='Необязательное к заполнению.'
+    )
+    genre = models.ManyToManyField(
+        Genre,
+        blank=True,
+        verbose_name='Жанр',
+        related_name='genres',
+        help_text='Необязательное к заполнению.'
+    )
     category = models.ForeignKey(
-        Category, on_delete=models.SET_NULL, blank=True, null=True
+        Category,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        verbose_name='Категория',
+        related_name='categories',
+        help_text='Необязательное к заполнению.'
+
     )
 
     class Meta:

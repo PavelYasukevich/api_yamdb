@@ -94,18 +94,22 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (CustomerAccessPermission,)
 
     def get_serializer_class(self):
-        if self.action == 'list' or self.action == 'retrieve':
+        if self.action in ['list', 'retrieve']:
             return serializers.TitleSerializeRead
-        else:
-            return serializers.TitleSerializerWrite
+        return serializers.TitleSerializerWrite
 
 
-class CategoryViewSet(
+class AvailableMethods(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
+    """ Исключен `retrieve()` метод."""
+    pass
+
+
+class CategoryViewSet(AvailableMethods):
     """
     Таблица: Category
     Разрешеные методы: GET, POST, DELETE
@@ -125,12 +129,7 @@ class CategoryViewSet(
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class GenreViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
+class GenreViewSet(AvailableMethods):
     """
     Таблица: Genre
     Разрешеные методы: GET, POST, DELETE

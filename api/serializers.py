@@ -34,7 +34,7 @@ class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        exclude = ('id',)
+        exclude = ['id']
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -42,7 +42,7 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        exclude = ('id',)
+        exclude = ['id']
 
 
 class TitleSerializeRead(serializers.ModelSerializer):
