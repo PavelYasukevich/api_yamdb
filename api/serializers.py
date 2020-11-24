@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Category, Comment, Genre, Review, Title
 
@@ -26,16 +25,9 @@ class MyUserSerializer(serializers.ModelSerializer):
         ]
 
 
-class MyTokenObtainPairSerializer(serializers.Serializer):
+class TokenObtainSerializer(serializers.Serializer):
     email = serializers.EmailField()
     confirmation_code = serializers.CharField(max_length=255)
-
-    def validate(self, data):
-        user = get_object_or_404(
-            User, email=data["email"], password=data["confirmation_code"]
-        )
-        refresh = RefreshToken.for_user(user)
-        return {"token": str(refresh.access_token)}
 
 
 class GenresSerializer(serializers.ModelSerializer):
