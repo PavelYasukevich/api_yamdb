@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.constraints import UniqueConstraint
 
 
 class MyUserManager(BaseUserManager):
@@ -36,24 +38,58 @@ class MyUserManager(BaseUserManager):
         return self._create_user(email, username, password, **extra_fields)
 
 
-class MyUser(AbstractUser):
-    class Roles(models.TextChoices):
-        anon = "anon"
-        user = "user"
-        moderator = "moderator"
-        admin = "admin"
-        django_admin = "django_admin"
+class Roles(models.TextChoices):
+    user = "user"
+    moderator = "moderator"
+    admin = "admin"
+    django_admin = "django_admin"
 
-    email = models.EmailField(max_length=25, unique=True)
-    bio = models.CharField(max_length=25, blank=True)
-    role = models.CharField(
-        max_length=12, choices=Roles.choices, default="user"
+
+class MyUser(AbstractUser):
+    email = models.EmailField(
+        max_length=50,
+        help_text="Электронная почта пользователя",
+        verbose_name="Электронная почта",
+        unique=True,
     )
+    bio = models.CharField(
+        max_length=255,
+        help_text="Информация о пользователе",
+        verbose_name="Информация",
+        blank=True,
+    )
+    role = models.CharField(
+        choices=Roles.choices,
+        default="user",
+        max_length=50,
+        help_text="Права пользователя",
+        verbose_name="Права",
+    )
+
+    @property
+    def is_moderator(self):
+        return self.role == "moderator"
+
+    @property
+    def is_admin():
+        return self.role == "admin"
+
+    @property
+    def is_django_admin():
+        return self.role == "django_admin"
 
     objects = MyUserManager()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    class Meta:
+        ordering = ['email']
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
+
+    def __str__(self):
+        return self.email
 
 
 class Genre(models.Model):
@@ -86,27 +122,72 @@ class Title(models.Model):
 
 
 class Review(models.Model):
+
+    def validate_score(value):
+        if 10 < value < 1:
+            raise ValidationError('Оценка должна между 1 и 10.')
+
     author = models.ForeignKey(
-        MyUser, on_delete=models.CASCADE, related_name="reviews"
-    )
-    title_id = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name="reviews"
-    )
-    text = models.TextField()
-    score = models.IntegerField()
-    pub_date = models.DateTimeField(
-        "Дата добавления", auto_now_add=True, db_index=True
+        MyUser,
+        help_text="Автор отзыва",
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        verbose_name="Автор отзыва",
     )
 
+    title = models.ForeignKey(
+        Title, on_delete=models.CASCADE, related_name="reviews"
+    )
+
+    text = models.TextField(
+        help_text="Отзыв пользователя",
+        verbose_name="Отзыв",
+    )
+    score = models.PositiveSmallIntegerField(
+        help_text="Оценка пользователя",
+        validators=[validate_score],
+        verbose_name="Оценка",
+    )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+        help_text="Дата добавления отзыва",
+        verbose_name="Дата добавления"
+    )
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=['author', 'title'],
+                name="unique_review"
+            )
+        ]
+
+    def __str__(self):
+        pass
 
 class Comment(models.Model):
     author = models.ForeignKey(
-        MyUser, on_delete=models.CASCADE, related_name="comments"
+        MyUser,
+        help_text="Автор комментария",
+        on_delete=models.CASCADE,
+        related_name="comments",
+        verbose_name="Автор комментария"
     )
-    text = models.TextField()
+    text = models.TextField(
+        help_text="Комментарий пользователя",
+        verbose_name="Комментарий",
+    )
     pub_date = models.DateTimeField(
-        "Дата добавления", auto_now_add=True, db_index=True
+        auto_now_add=True,
+        db_index=True,
+        help_text="Дата добавления комментария",
+        verbose_name="Дата добавления"
     )
     review_id = models.ForeignKey(
-        Review, on_delete=models.CASCADE, related_name="comments"
+        Review,
+        help_text="Комментируемый отзыв",
+        on_delete=models.CASCADE,
+        related_name="comments",
+        verbose_name="Комментируемый отзыв"
     )

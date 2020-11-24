@@ -91,24 +91,19 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field="username"
     )
-    title_id = serializers.SlugRelatedField(read_only=True, slug_field="name")
 
     class Meta:
-        fields = "__all__"
+        exclude = ["title"]
         model = Review
 
     def validate(self, data):
-        title_id = self.context["view"].kwargs["title_id"]
+        title = self.context["view"].kwargs["title_id"]
         author = self.context["request"].user
         if self.context["request"].method == "POST":
             if Review.objects.filter(
-                author=author, title_id=title_id
+                author=author, title=title
             ).exists():
                 raise serializers.ValidationError("Вы уже оставили отзыв")
-            if 10 < data["score"] < 1:
-                raise serializers.ValidationError(
-                    "Оценка должна между 1 и 10."
-                )
         return data
 
 
