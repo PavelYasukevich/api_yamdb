@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Avg
 from rest_framework import serializers
 
 from .models import Category, Comment, Genre, Review, Title
@@ -51,7 +50,6 @@ class TitleSerializeRead(serializers.ModelSerializer):
     genre = GenresSerializer(read_only=True, many=True)
     category = CategoriesSerializer(read_only=True)
     rating = serializers.IntegerField()
-
 
     class Meta:
         model = Title

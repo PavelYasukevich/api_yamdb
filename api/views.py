@@ -1,13 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.db.models import Avg
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, status, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework import filters, mixins, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -22,6 +22,7 @@ User = get_user_model()
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def get_confirmation_code(request):
     serializer = serializers.EmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -38,6 +39,7 @@ def get_confirmation_code(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def get_token(request):
     serializer = serializers.TokenObtainSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -127,7 +129,6 @@ class CategoryViewSet(AvailableMethods):
         if self.action == 'destroy':
             obj = get_object_or_404(Category, slug=self.kwargs['pk'])
             return obj
-
 
 
 class GenreViewSet(AvailableMethods):
