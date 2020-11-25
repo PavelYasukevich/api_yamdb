@@ -116,17 +116,17 @@ class CategoryViewSet(AvailableMethods):
     Доступ: GET - Нет ограничений
             POST, DELETE - admin
     """
-
     queryset = Category.objects.all()
     serializer_class = serializers.CategoriesSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
     permission_classes = (CustomerAccessPermission,)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = get_object_or_404(Category, slug=self.kwargs['pk'])
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def get_object(self):
+        if self.action == 'destroy':
+            obj = get_object_or_404(Category, slug=self.kwargs['pk'])
+            return obj
+
 
 
 class GenreViewSet(AvailableMethods):
@@ -143,10 +143,10 @@ class GenreViewSet(AvailableMethods):
     search_fields = ['=name']
     permission_classes = (CustomerAccessPermission,)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = get_object_or_404(Genre, slug=self.kwargs['pk'])
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def get_object(self):
+        if self.action == 'destroy':
+            obj = get_object_or_404(Genre, slug=self.kwargs['pk'])
+            return obj
 
 
 class ReviewViewSet(ModelViewSet):
