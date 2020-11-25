@@ -70,6 +70,13 @@ class Genre(models.Model):
 
     )
 
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
+
+    def __str__(self):
+        return self.name
+
 
 class Category(models.Model):
     name = models.CharField(
@@ -83,6 +90,13 @@ class Category(models.Model):
         max_length=10,
         help_text='Содержание уникальное, длиной до 10 символов.'
     )
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
+    def __str__(self):
+        return self.name
 
 
 class Title(models.Model):
@@ -119,7 +133,9 @@ class Title(models.Model):
     )
 
     class Meta:
-        ordering = ('-year',)
+        ordering = ['-year']
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'Произведения'
 
     def __str__(self):
         return self.name

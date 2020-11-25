@@ -50,10 +50,8 @@ class TitleSerializeRead(serializers.ModelSerializer):
 
     genre = GenresSerializer(read_only=True, many=True)
     category = CategoriesSerializer(read_only=True)
-    rating = serializers.SerializerMethodField('calc_rating')
+    rating = serializers.IntegerField()
 
-    def calc_rating(self, obj):
-        return obj.reviews.aggregate(Avg('score'))['score__avg']
 
     class Meta:
         model = Title
