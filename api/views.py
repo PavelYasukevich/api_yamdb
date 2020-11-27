@@ -126,11 +126,7 @@ class CategoryViewSet(AvailableMethods):
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
     permission_classes = (IsAdminOrReadOnly,)
-
-    def get_object(self):
-        if self.action == 'destroy':
-            obj = get_object_or_404(Category, slug=self.kwargs['pk'])
-            return obj
+    lookup_field = "slug"
 
 
 class GenreViewSet(AvailableMethods):
@@ -146,11 +142,7 @@ class GenreViewSet(AvailableMethods):
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
     permission_classes = (IsAdminOrReadOnly,)
-
-    def get_object(self):
-        if self.action == 'destroy':
-            obj = get_object_or_404(Genre, slug=self.kwargs['pk'])
-            return obj
+    lookup_field = "slug"
 
 
 class ReviewViewSet(ModelViewSet):
