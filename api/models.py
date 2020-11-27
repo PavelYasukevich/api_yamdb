@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 
@@ -8,7 +8,6 @@ class Roles(models.TextChoices):
     user = 'user'
     moderator = 'moderator'
     admin = 'admin'
-    django_admin = 'django_admin'
 
 
 class MyUser(AbstractUser):
@@ -26,7 +25,7 @@ class MyUser(AbstractUser):
     )
     role = models.CharField(
         choices=Roles.choices,
-        default='user',
+        default=Roles.user,
         max_length=50,
         help_text='Права пользователя',
         verbose_name='Права',
@@ -34,18 +33,13 @@ class MyUser(AbstractUser):
 
     @property
     def is_moderator(self):
-        return self.role == 'moderator'
+        return self.is_staff or self.role == Roles.moderator
 
     @property
     def is_admin(self):
-        return self.role == 'admin'
-
-    @property
-    def is_django_admin(self):
-        return self.role == 'django_admin'
+        return self.is_superuser or self.role == Roles.admin
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
 
     class Meta:
         ordering = ['email']
@@ -141,10 +135,6 @@ class Title(models.Model):
 
 
 class Review(models.Model):
-    def validate_score(value):
-        if 10 < value < 1:
-            raise ValidationError('Оценка должна между 1 и 10.')
-
     author = models.ForeignKey(
         MyUser,
         help_text='Автор отзыва',
@@ -152,7 +142,6 @@ class Review(models.Model):
         related_name='reviews',
         verbose_name='Автор отзыва',
     )
-
     title = models.ForeignKey(
         Title,
         help_text='Произведение, на которое сделан отзыв',
@@ -160,14 +149,16 @@ class Review(models.Model):
         related_name='reviews',
         verbose_name='Произведение',
     )
-
     text = models.TextField(
         help_text='Отзыв пользователя',
         verbose_name='Отзыв',
     )
     score = models.PositiveSmallIntegerField(
         help_text='Оценка пользователя',
-        validators=[validate_score],
+        validators=[
+            MinValueValidator(1, 'Оценка не может быть меньше 1.'),
+            MaxValueValidator(10, 'Оценка не может быть больше 10.')
+        ],
         verbose_name='Оценка',
     )
     pub_date = models.DateTimeField(

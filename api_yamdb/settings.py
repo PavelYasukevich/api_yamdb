@@ -25,7 +25,9 @@ AUTH_USER_MODEL = 'api.MyUser'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-DEFAULT_FROM_EMAIL = 'noreply@yamdb.com'
+DOMAIN_NAME = 'yamdb.com'
+
+DEFAULT_FROM_EMAIL = 'noreply@' + DOMAIN_NAME
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

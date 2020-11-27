@@ -15,8 +15,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from . import serializers
 from .filters import TitleFilter
 from .models import Category, Genre, Review, Title
-from .permissions import (CustomerAccessPermission, IsAdmin,
-                          ReviewCommentPermission)
+from .permissions import IsAdmin, IsAdminOrReadOnly, ReviewCommentPermission
 
 User = get_user_model()
 
@@ -26,13 +25,16 @@ User = get_user_model()
 def get_confirmation_code(request):
     serializer = serializers.EmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    confirmation_code = default_token_generator.make_token(request.user)
-    User.objects.create(
-        email=serializer.validated_data['email'], password=confirmation_code
+    user, created = User.objects.get_or_create(
+        email=serializer.validated_data['email'],
     )
+    if created:
+        user.set_unusable_password()
+    confirmation_code = default_token_generator.make_token(request.user)
     send_mail(
         'Your confirmation code',
         confirmation_code,
+        None,
         [serializer.data['email']],
     )
     return Response(serializer.data)
@@ -79,7 +81,7 @@ class MyUserViewSet(viewsets.ModelViewSet):
             instance=user, data=request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        serializer.save(role=user.role)
         return Response(serializer.data)
 
 
@@ -94,7 +96,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
-    permission_classes = (CustomerAccessPermission,)
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve',):
@@ -123,7 +125,7 @@ class CategoryViewSet(AvailableMethods):
     serializer_class = serializers.CategoriesSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
-    permission_classes = (CustomerAccessPermission,)
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_object(self):
         if self.action == 'destroy':
@@ -143,7 +145,7 @@ class GenreViewSet(AvailableMethods):
     serializer_class = serializers.GenresSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
-    permission_classes = (CustomerAccessPermission,)
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_object(self):
         if self.action == 'destroy':
@@ -169,11 +171,17 @@ class CommentViewSet(ModelViewSet):
     permission_classes = [ReviewCommentPermission]
 
     def get_queryset(self):
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        review = get_object_or_404(
+            Review.objects.select_related('title'),
+            title__id=self.kwargs.get('title_id'),
+            pk=self.kwargs.get('review_id')
+        )
         return review.comments.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        review = get_object_or_404(
+            Review.objects.select_related('title'),
+            title__id=self.kwargs.get('title_id'),
+            pk=self.kwargs.get('review_id')
+        )
         return serializer.save(author=self.request.user, review_id=review)

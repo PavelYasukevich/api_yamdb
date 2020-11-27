@@ -49,7 +49,11 @@ class TitleSerializeRead(serializers.ModelSerializer):
 
     genre = GenresSerializer(read_only=True, many=True)
     category = CategoriesSerializer(read_only=True)
-    rating = serializers.DecimalField(max_digits=None, decimal_places=1, coerce_to_string=False)
+    rating = serializers.DecimalField(
+        max_digits=None,
+        decimal_places=1,
+        coerce_to_string=False
+    )
 
     class Meta:
         model = Title
@@ -84,11 +88,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate(self, data):
-        if self.context['request'].method == 'POST':
-            title = self.context['request'].parser_context['kwargs'][
-                'title_id'
-            ]
-            author = self.context['request'].user
+        request = self.context['request']
+        if request.method == 'POST':
+            title = request.parser_context['kwargs']['title_id']
+            author = request.user
             if Review.objects.filter(author=author, title=title).exists():
                 raise serializers.ValidationError('Вы уже оставили отзыв')
         return data
