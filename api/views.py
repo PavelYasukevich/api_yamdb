@@ -97,7 +97,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (CustomerAccessPermission,)
 
     def get_serializer_class(self):
-        if self.action in ['list', 'retrieve']:
+        if self.action in ('list', 'retrieve',):
             return serializers.TitleSerializeRead
         return serializers.TitleSerializerWrite
 

@@ -118,7 +118,7 @@ class Title(models.Model):
         Genre,
         blank=True,
         verbose_name='Жанр',
-        related_name='genres',
+        related_name='titles',
         help_text='Необязательное к заполнению.'
     )
     category = models.ForeignKey(
@@ -127,13 +127,12 @@ class Title(models.Model):
         blank=True,
         null=True,
         verbose_name='Категория',
-        related_name='categories',
+        related_name='titles',
         help_text='Необязательное к заполнению.'
 
     )
 
     class Meta:
-        ordering = ['-year']
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 

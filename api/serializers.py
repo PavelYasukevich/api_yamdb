@@ -49,7 +49,7 @@ class TitleSerializeRead(serializers.ModelSerializer):
 
     genre = GenresSerializer(read_only=True, many=True)
     category = CategoriesSerializer(read_only=True)
-    rating = serializers.IntegerField()
+    rating = serializers.DecimalField(max_digits=None, decimal_places=1, coerce_to_string=False)
 
     class Meta:
         model = Title
