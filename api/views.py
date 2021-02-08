@@ -1,5 +1,6 @@
+from uuid import uuid4
+
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
@@ -28,9 +29,9 @@ def get_confirmation_code(request):
     user, created = User.objects.get_or_create(
         email=serializer.validated_data['email'],
     )
-    if created:
-        user.set_unusable_password()
-    confirmation_code = default_token_generator.make_token(request.user)
+    confirmation_code = uuid4().hex
+    user.set_password(confirmation_code)
+    user.save()
     send_mail(
         'Your confirmation code',
         confirmation_code,
@@ -49,7 +50,7 @@ def get_token(request):
     confirmation_code = serializer.validated_data['confirmation_code']
     user = get_object_or_404(User, email=email)
 
-    if default_token_generator.check_token(user, confirmation_code):
+    if user.check_password(confirmation_code):
         token = RefreshToken.for_user(user)
         return Response({'token': str(token.access_token)})
     return Response(

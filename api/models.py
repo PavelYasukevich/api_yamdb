@@ -40,6 +40,7 @@ class MyUser(AbstractUser):
         return self.is_superuser or self.role == Roles.admin
 
     USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
 
     class Meta:
         ordering = ['email']
