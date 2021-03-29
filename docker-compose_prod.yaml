@@ -1,0 +1,22 @@
+version: '3.8'
+
+volumes:
+  postgres_data:
+
+services:
+  yamdb_db:
+    image: postgres:alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+  yamdb_web:
+    build: .
+    restart: always
+    command: gunicorn api_yamdb.wsgi:application --bind 0.0.0.0:8000
+    ports:
+      - "8080:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./.env

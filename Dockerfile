@@ -1,13 +1,13 @@
 FROM python:slim
 
-RUN mkdir /code
+RUN mkdir /yamdb
 
-COPY requirements.txt /code
+COPY requirements.txt /yamdb
 
-RUN pip install -r /code/requirements.txt
+RUN pip install -r /yamdb/requirements.txt
 
-COPY . /code
+COPY . /yamdb
 
-WORKDIR /code
+WORKDIR /yamdb
 
 CMD gunicorn api_yamdb.wsgi:application --bind 0.0.0.0:8000
