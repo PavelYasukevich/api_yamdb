@@ -17,6 +17,6 @@ services:
     ports:
       - "8080:8000"
     depends_on:
-      - db
+      - yamdb_db
     env_file:
       - ./.env

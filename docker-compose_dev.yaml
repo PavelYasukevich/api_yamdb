@@ -10,6 +10,7 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env
+      
   yamdb_web:
     build: .
     restart: always
@@ -17,6 +18,6 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      - yamdb_db
     env_file:
       - ./.env
